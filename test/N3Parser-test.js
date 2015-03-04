@@ -36,9 +36,9 @@ describe('N3Parser', function () {
 
     it('should parse three triples',
       shouldParse('<a> <b> <c>.\n<d> <e> <f>.\n<g> <h> <i>.',
-                  ['a', 'b', 'c'],
-                  ['d', 'e', 'f'],
-                  ['g', 'h', 'i']));
+                  ['a', 'b', 'c', '', 1],
+                  ['d', 'e', 'f', '', 2],
+                  ['g', 'h', 'i', '', 3]));
 
     it('should parse a triple with a literal',
       shouldParse('<a> <b> "string".',
@@ -84,15 +84,15 @@ describe('N3Parser', function () {
       shouldParse('@prefix : <#>.\n' +
                   '@prefix a: <a#>.\n' +
                   ':x a:a a:b.',
-                  ['#x', 'a#a', 'a#b']));
+                  ['#x', 'a#a', 'a#b', '', 3]));
 
     it('should parse triples with prefixes and different punctuation',
       shouldParse('@prefix : <#>.\n' +
                   '@prefix a: <a#>.\n' +
                   ':x a:a a:b;a:c a:d,a:e.',
-                  ['#x', 'a#a', 'a#b'],
-                  ['#x', 'a#c', 'a#d'],
-                  ['#x', 'a#c', 'a#e']));
+                  ['#x', 'a#a', 'a#b', '', 3],
+                  ['#x', 'a#c', 'a#d', '', 3],
+                  ['#x', 'a#c', 'a#e', '', 3]));
 
     it('should not parse undefined empty prefix in subject',
       shouldNotParse(':a ',
@@ -118,7 +118,7 @@ describe('N3Parser', function () {
       shouldParse('PREFIX : <#>\n' +
                   'PrEfIX a: <a#> ' +
                   ':x a:a a:b.',
-                  ['#x', 'a#a', 'a#b']));
+                  ['#x', 'a#a', 'a#b', '', 2]));
 
     it('should not parse prefix declarations without prefix',
       shouldNotParse('@prefix <a> ',
@@ -135,17 +135,17 @@ describe('N3Parser', function () {
     it('should parse statements with shared subjects',
       shouldParse('<a> <b> <c>;\n<d> <e>.',
                   ['a', 'b', 'c'],
-                  ['a', 'd', 'e']));
+                  ['a', 'd', 'e', '', 2]));
 
     it('should parse statements with shared subjects and trailing semicolon',
       shouldParse('<a> <b> <c>;\n<d> <e>;\n.',
                   ['a', 'b', 'c'],
-                  ['a', 'd', 'e']));
+                  ['a', 'd', 'e', '', 2]));
 
     it('should parse statements with shared subjects and multiple semicolons',
       shouldParse('<a> <b> <c>;;\n<d> <e>.',
                   ['a', 'b', 'c'],
-                  ['a', 'd', 'e']));
+                  ['a', 'd', 'e', '', 2]));
 
     it('should parse statements with shared subjects and predicates',
       shouldParse('<a> <b> <c>, <d>.',
@@ -380,24 +380,24 @@ describe('N3Parser', function () {
                   '<a> <b> <c>.\n' +
                   '@base <d/>.\n' +
                   '<e> <f> <g>.',
-                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c'],
-                  ['http://ex.org/d/e', 'http://ex.org/d/f', 'http://ex.org/d/g']));
+                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c', '', 2],
+                  ['http://ex.org/d/e', 'http://ex.org/d/f', 'http://ex.org/d/g', '', 4]));
 
     it('should resolve IRIs against SPARQL base',
       shouldParse('BASE <http://ex.org/>\n' +
                   '<a> <b> <c>. ' +
                   'BASE <d/> ' +
                   '<e> <f> <g>.',
-                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c'],
-                  ['http://ex.org/d/e', 'http://ex.org/d/f', 'http://ex.org/d/g']));
+                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c', '', 2],
+                  ['http://ex.org/d/e', 'http://ex.org/d/f', 'http://ex.org/d/g', '', 2]));
 
     it('should resolve IRIs against a @base with query string',
       shouldParse('@base <http://ex.org/?foo>.\n' +
                   '<> <b> <c>.\n' +
                   '@base <d/?bar>.\n' +
                   '<> <f> <g>.',
-                  ['http://ex.org/?foo', 'http://ex.org/b', 'http://ex.org/c'],
-                  ['http://ex.org/d/?bar', 'http://ex.org/d/f', 'http://ex.org/d/g']));
+                  ['http://ex.org/?foo', 'http://ex.org/b', 'http://ex.org/c', '', 2],
+                  ['http://ex.org/d/?bar', 'http://ex.org/d/f', 'http://ex.org/d/g', '', 4]));
 
     it('should resolve IRIs with query string against @base',
       shouldParse('@base <http://ex.org/>.\n' +
@@ -406,26 +406,26 @@ describe('N3Parser', function () {
                   '<?> <?a> <?a=b>.' +
                   '@base <?e>.\n' +
                   '<> <?a> <?a=b>.',
-                  ['http://ex.org/?', 'http://ex.org/?a', 'http://ex.org/?a=b'],
-                  ['http://ex.org/d?', 'http://ex.org/d?a', 'http://ex.org/d?a=b'],
-                  ['http://ex.org/d?e', 'http://ex.org/d?a', 'http://ex.org/d?a=b']));
+                  ['http://ex.org/?', 'http://ex.org/?a', 'http://ex.org/?a=b', '', 2],
+                  ['http://ex.org/d?', 'http://ex.org/d?a', 'http://ex.org/d?a=b', '', 4],
+                  ['http://ex.org/d?e', 'http://ex.org/d?a', 'http://ex.org/d?a=b', '', 5]));
 
     it('should not resolve IRIs with colons',
       shouldParse('@base <http://ex.org/>.\n' +
                   '<a>   <b>   <c>.\n' +
                   '<A:>  <b:>  <c:>.\n' +
                   '<a:a> <b:B> <C-D:c>.',
-                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c'],
-                  ['A:',  'b:',  'c:'],
-                  ['a:a', 'b:B', 'C-D:c']));
+                  ['http://ex.org/a', 'http://ex.org/b', 'http://ex.org/c', '', 2],
+                  ['A:',  'b:',  'c:', '', 3],
+                  ['a:a', 'b:B', 'C-D:c', '', 4]));
 
     it('should resolve datatype IRIs against @base',
       shouldParse('@base <http://ex.org/>.\n' +
                   '<a> <b> "c"^^<d>.\n' +
                   '@base <d/>.\n' +
                   '<e> <f> "g"^^<h>.',
-                  ['http://ex.org/a', 'http://ex.org/b', '"c"^^http://ex.org/d'],
-                  ['http://ex.org/d/e', 'http://ex.org/d/f', '"g"^^http://ex.org/d/h']));
+                  ['http://ex.org/a', 'http://ex.org/b', '"c"^^http://ex.org/d', '', 2],
+                  ['http://ex.org/d/e', 'http://ex.org/d/f', '"g"^^http://ex.org/d/h', '', 4]));
 
     it('should parse an empty default graph',
       shouldParse('{}'));
@@ -484,23 +484,23 @@ describe('N3Parser', function () {
 
     it('should parse a one-triple named graph with a prefixed name ending without a dot',
       shouldParse('@prefix g: <g#>.\ng:h {<a> <b> <c>}',
-                  ['a', 'b', 'c', 'g#h']));
+                  ['a', 'b', 'c', 'g#h', 2]));
 
     it('should parse a one-triple named graph with a prefixed name ending with a dot',
       shouldParse('@prefix g: <g#>.\ng:h{<a> <b> <c>.}',
-                  ['a', 'b', 'c', 'g#h']));
+                  ['a', 'b', 'c', 'g#h',  2]));
 
     it('should parse a three-triple named graph with a prefixed name ending without a dot',
       shouldParse('@prefix g: <g#>.\ng:h {<a> <b> <c>;<d> <e>,<f>}',
-                  ['a', 'b', 'c', 'g#h'],
-                  ['a', 'd', 'e', 'g#h'],
-                  ['a', 'd', 'f', 'g#h']));
+                  ['a', 'b', 'c', 'g#h', 2],
+                  ['a', 'd', 'e', 'g#h', 2],
+                  ['a', 'd', 'f', 'g#h', 2]));
 
     it('should parse a three-triple named graph with a prefixed name ending with a dot',
       shouldParse('@prefix g: <g#>.\ng:h{<a> <b> <c>;<d> <e>,<f>.}',
-                  ['a', 'b', 'c', 'g#h'],
-                  ['a', 'd', 'e', 'g#h'],
-                  ['a', 'd', 'f', 'g#h']));
+                  ['a', 'b', 'c', 'g#h', 2],
+                  ['a', 'd', 'e', 'g#h', 2],
+                  ['a', 'd', 'f', 'g#h', 2]));
 
     it('should parse an empty anonymous graph',
       shouldParse('[] {}'));
@@ -540,7 +540,7 @@ describe('N3Parser', function () {
 
     it('should parse a one-triple named graph with a prefixed name and the GRAPH keyword',
       shouldParse('@prefix g: <g#>.\nGRAPH g:h {<a> <b> <c>}',
-                  ['a', 'b', 'c', 'g#h']));
+                  ['a', 'b', 'c', 'g#h', 2]));
 
     it('should parse a one-triple anonymous graph and the GRAPH keyword',
       shouldParse('GRAPH [] {<a> <b> <c>}',
@@ -548,7 +548,7 @@ describe('N3Parser', function () {
 
     it('should parse a graph with 8-bit unicode escape sequences',
       shouldParse('<\\U0001d400> {\n<\\U0001d400> <\\U0001d400> "\\U0001d400"^^<\\U0001d400>\n}\n',
-                  ['\ud835\udC00', '\ud835\udc00', '"\ud835\udc00"^^\ud835\udc00', '\ud835\udc00']));
+                  ['\ud835\udC00', '\ud835\udc00', '"\ud835\udc00"^^\ud835\udc00', '\ud835\udc00', 3]));
 
     it('should not parse a single closing brace',
       shouldNotParse('}',
@@ -600,7 +600,7 @@ describe('N3Parser', function () {
 
     it('should parse a quad with 4 prefixed names',
       shouldParse('@prefix p: <p#>.\np:a p:b p:c p:g.',
-                  ['p#a', 'p#b', 'p#c', 'p#g']));
+                  ['p#a', 'p#b', 'p#c', 'p#g', 2]));
 
     it('should not parse a quad with an undefined prefix',
       shouldNotParse('<a> <b> <c> p:g.',
@@ -727,8 +727,8 @@ describe('N3Parser', function () {
                   '@prefix : <#>.\n' +
                   '<a> <b> <c> <g>.\n' +
                   ':d :e :f :g.',
-                  ['http://ex.org/doc/a', 'http://ex.org/doc/b', 'http://ex.org/doc/c', 'http://ex.org/doc/g'],
-                  ['http://ex.org/doc/f.ttl#d', 'http://ex.org/doc/f.ttl#e', 'http://ex.org/doc/f.ttl#f', 'http://ex.org/doc/f.ttl#g']));
+                  ['http://ex.org/doc/a', 'http://ex.org/doc/b', 'http://ex.org/doc/c', 'http://ex.org/doc/g', 2],
+                  ['http://ex.org/doc/f.ttl#d', 'http://ex.org/doc/f.ttl#e', 'http://ex.org/doc/f.ttl#f', 'http://ex.org/doc/f.ttl#g', 3]));
 
     it('should resolve IRIs with a trailing slashes against the document IRI',
       shouldParse(parser,
@@ -750,9 +750,9 @@ describe('N3Parser', function () {
                   '@base </e/>.\n' +
                   '<k> <l> <m>.',
                   ['http://ex.org/doc/a', 'http://ex.org/doc/b', 'http://ex.org/doc/c'],
-                  ['http://ex.org/x/e', 'http://ex.org/x/f', 'http://ex.org/x/g'],
-                  ['http://ex.org/x/d/h', 'http://ex.org/x/d/i', 'http://ex.org/x/d/j'],
-                  ['http://ex.org/e/k', 'http://ex.org/e/l', 'http://ex.org/e/m']));
+                  ['http://ex.org/x/e', 'http://ex.org/x/f', 'http://ex.org/x/g', '', 3],
+                  ['http://ex.org/x/d/h', 'http://ex.org/x/d/i', 'http://ex.org/x/d/j', '', 5],
+                  ['http://ex.org/e/k', 'http://ex.org/e/l', 'http://ex.org/e/m', '', 7]));
   });
 
   describe('An N3Parser instance with an invalid document IRI', function () {
@@ -856,7 +856,7 @@ function shouldParse(parser, input) {
   var hasParser = parser instanceof N3Parser,
       expected = Array.prototype.slice.call(arguments, hasParser ? 2 : 1),
       items = expected.map(function (item) {
-        return { subject: item[0], predicate: item[1], object: item[2], graph: item[3] || '' };
+        return { subject: item[0], predicate: item[1], object: item[2], line: (item[4] || 1), graph: item[3] || '' };
       });
   N3Parser._resetBlankNodeIds();
   // Shift parameters if necessary
